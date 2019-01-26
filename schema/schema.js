@@ -1,17 +1,37 @@
+// Module imports
 const graphql = require('graphql');
 const axios = require('axios');
-
 const { GraphQLSchema, GraphQLObjectType, GraphQLString, GraphQLInt } = graphql;
 
+// Model for the GraphQL Company type
+const CompanyType = new GraphQLObjectType({
+    name: 'Company',
+    fields: {
+        id: { type: GraphQLString },
+        name: { type: GraphQLString },
+        description: { type: GraphQLString }
+    }
+});
+
+// Model for the GraphQL User type
 const UserType = new GraphQLObjectType({
     name: 'User',
     fields: {
         id: { type: GraphQLString },
         firstName: { type: GraphQLString },
-        age: { type: GraphQLInt }
+        age: { type: GraphQLInt },
+        company: {
+            type: CompanyType,
+            resolve(parentValue, args) {
+                // prettier-ignore
+                return axios.get(`http://localhost:3000/companies/${parentValue.companyId}`)
+                    .then((res) => res.data);
+            }
+        }
     }
 });
 
+// Root Query for GraphQL
 const RootQuery = new GraphQLObjectType({
     name: 'RootQueryField',
     fields: {
@@ -27,6 +47,7 @@ const RootQuery = new GraphQLObjectType({
     }
 });
 
+// GraphQL Schema export
 module.exports = new GraphQLSchema({
     query: RootQuery
 });
